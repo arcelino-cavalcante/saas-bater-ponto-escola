@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ponto Escolar SaaS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --main-color: #304ffe;
+            --danger: #d32f2f;
+            --bg-main: #f4f6fa;
+            --box-bg: #fff;
+            --table-head: #e3e8ff;
+            --success: #1b910b;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            position: relative;
+            max-width: 440px;
+            background: var(--box-bg);
+            margin: 48px auto 32px auto;
+            padding: 40px 24px 34px 24px;
+            border-radius: 18px;
+            box-shadow: 0 2px 16px #0002;
+            min-height: 350px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px 2vw;
+                padding: 13vw 2vw 8vw 2vw;
+                min-height: 220px;
+            }
+        }
+
+        h2 {
+            color: var(--main-color);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .form-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-center label {
+            width: 100%;
+            max-width: 300px;
+            text-align: left;
+        }
+
+        .form-center input,
+        .form-center select {
+            width: 100%;
+            max-width: 300px;
+            margin: 6px 0 18px 0;
+            padding: 11px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            background: #fafbfc;
+            display: block;
+        }
+
+        .form-center button {
+            max-width: 300px;
+            width: 100%;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: var(--main-color);
+            color: #fff;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #002984;
+        }
+
+        .menu {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 22px 0 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .menu button {
+            flex: 1;
+            background: #eee;
+            color: #333;
+            border: 1px solid #eee;
+            margin-bottom: 0;
+            padding: 10px 5px;
+            min-width: 110px;
+            font-size: 15px;
+        }
+
+        .menu button.active {
+            background: var(--main-color);
+            color: #fff;
+            border: 1px solid var(--main-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+            font-size: 15px;
+        }
+
+        th,
+        td {
+            border: 1px solid #eee;
+            padding: 8px 3px;
+            text-align: center;
+        }
+
+        th {
+            background: var(--table-head);
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        @media (max-width: 480px) {
+
+            th,
+            td {
+                padding: 7px 5px;
+            }
+        }
+
+        .link-publico {
+            background: #f0f8ff;
+            border: 1px dashed var(--main-color);
+            color: var(--main-color);
+            padding: 11px 7px;
+            margin: 22px 0;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 15px;
+            word-break: break-all;
+        }
+
+        .msg-erro {
+            color: var(--danger);
+            text-align: center;
+        }
+
+        .msg-sucesso {
+            color: var(--success);
+            text-align: center;
+        }
+
+        .sair-btn {
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            background: var(--danger);
+            margin: 0;
+            width: auto;
+            min-width: 74px;
+            padding: 9px 17px;
+            border-radius: 8px;
+            font-size: 15px;
+            z-index: 2;
+        }
+
+        .sair-btn:hover {
+            background: #a11717;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--main-color);
+            font-size: 1.1em;
+        }
+
+        .switch-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 18px 0 30px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        @media (max-width: 600px) {
+            .switch-wrap {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 7px;
+                margin-bottom: 20px;
+            }
+        }
+
+        .switch-label {
+            font-size: 0.97em;
+            min-width: 220px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--main-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+
+        @media (max-width: 600px) {
+            .menu {
+                flex-direction: column;
+                gap: 7px;
+            }
+
+            .menu button {
+                min-width: unset;
+                width: 100%;
+            }
+
+            .table-scroll {
+                margin-bottom: 15px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+        }
+
+        .btn-apagar-hist {
+            background: var(--danger);
+            color: #fff;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-size: 15px;
+            padding: 10px 0;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-apagar-hist:hover {
+            background: #a11717;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="app">
+        <div class="loading">Carregando...</div>
+    </div>
+    <script>
+        // ---- CONFIG SUPABASE ----
+        const SUPABASE_URL = "https://vyggdcgbobiltzmsllcs.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5Z2dkY2dib2JpbHR6bXNsbGNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2OTA1MDUsImV4cCI6MjA2MzI2NjUwNX0.LsgdXxbY-mwj4gKbEc4rPYIG6QLG0SzIGVBOow5to0w";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const SEG_KEY = "seg_ponto";
+        let currentUser = null, escolaId = null, segAtiva = false;
+
+        function exibeErro(msg) { let erroDiv = document.getElementById("msgErro"); if (erroDiv) erroDiv.innerText = msg; }
+        function exibeSucesso(msg) { let sucessoDiv = document.getElementById("msgSucesso"); if (sucessoDiv) sucessoDiv.innerText = msg; }
+
+        function renderLogin() {
+            document.getElementById("app").innerHTML = `
+        <h2>Login - Ponto Escolar</h2>
+        <form id="loginForm" autocomplete="on" class="form-center">
+            <label>E-mail da escola:</label>
+            <input type="email" id="loginEmail" required autofocus>
+            <label>Senha:</label>
+            <input type="password" id="loginSenha" required>
+            <button type="submit">Entrar</button>
+        </form>
+        <p style="text-align:center;">ou</p>
+        <div class="form-center">
+            <button onclick="window.renderCadastro()" style="max-width:300px">Cadastrar nova escola</button>
+        </div>
+        <div id="msgErro" class="msg-erro"></div>`;
+            document.getElementById("loginForm").onsubmit = async (e) => {
+                e.preventDefault(); exibeErro("");
+                const email = document.getElementById("loginEmail").value.trim();
+                const senha = document.getElementById("loginSenha").value.trim();
+                try {
+                    const { data, error } = await supabase.from("users").select("*").eq("email", email).eq("password", senha).single();
+                    if (data) {
+                        currentUser = data; escolaId = data.id;
+                        segAtiva = localStorage.getItem(SEG_KEY + "_" + escolaId) === "true";
+                        renderPainel();
+                    } else { exibeErro("E-mail ou senha inválidos."); if (error) console.error("Login erro:", error); }
+                } catch (err) { exibeErro("Erro ao conectar ao servidor!"); console.error(err); }
+            };
+        }
+        function renderCadastro() {
+            document.getElementById("app").innerHTML = `
+        <h2>Cadastrar Escola</h2>
+        <form id="cadForm" autocomplete="on" class="form-center">
+            <label>Nome da Escola:</label>
+            <input type="text" id="nomeEscola" required>
+            <label>E-mail:</label>
+            <input type="email" id="cadEmail" required>
+            <label>Senha:</label>
+            <input type="password" id="cadSenha" required>
+            <button type="submit">Cadastrar</button>
+        </form>
+        <div class="form-center">
+            <button onclick="window.renderLogin()" style="max-width:300px">Voltar</button>
+        </div>
+        <div id="msgErro" class="msg-erro"></div>`;
+            document.getElementById("cadForm").onsubmit = async (e) => {
+                e.preventDefault(); exibeErro("");
+                const nome = document.getElementById("nomeEscola").value.trim();
+                const email = document.getElementById("cadEmail").value.trim();
+                const senha = document.getElementById("cadSenha").value.trim();
+                try {
+                    const { data: jaExiste } = await supabase.from("users").select("*").eq("email", email);
+                    if (jaExiste && jaExiste.length > 0) { exibeErro("E-mail já cadastrado."); return; }
+                    const { error } = await supabase.from("users").insert([{ nome_escola: nome, email, password: senha }]);
+                    if (error) { exibeErro("Erro ao cadastrar. Tente outro e-mail."); console.error("Cadastro erro:", error); }
+                    else { alert("Cadastro realizado! Faça login."); renderLogin(); }
+                } catch (err) { exibeErro("Erro ao conectar ao servidor!"); console.error(err); }
+            };
+        }
+        function renderPainel(menu = "funcionarios") {
+            document.getElementById("app").innerHTML = `
+        <button class="sair-btn" onclick="window.logout()">Sair</button>
+        <h2>Painel: ${currentUser.nome_escola || "Minha Escola"}</h2>
+        <div class="menu">
+            <button id="menuFuncionarios" class="${menu === 'funcionarios' ? 'active' : ''}">Cadastrar Funcionários</button>
+            <button id="menuPontos" class="${menu === 'pontos' ? 'active' : ''}">Ver Pontos do Mês</button>
+            <button id="menuHistorico" class="${menu === 'historico' ? 'active' : ''}">Histórico</button>
+            <button id="menuLink" class="${menu === 'link' ? 'active' : ''}">Link Público</button>
+        </div>
+        <div id="painelContent"><div class="loading">Carregando...</div></div>
+        <div id="msgSucesso" class="msg-sucesso"></div>`;
+            document.getElementById("menuFuncionarios").onclick = () => renderPainel("funcionarios");
+            document.getElementById("menuPontos").onclick = () => renderPainel("pontos");
+            document.getElementById("menuHistorico").onclick = () => renderPainel("historico");
+            document.getElementById("menuLink").onclick = () => renderPainel("link");
+            if (menu === "funcionarios") renderFuncionarios();
+            if (menu === "pontos") renderPontos();
+            if (menu === "historico") renderHistorico();
+            if (menu === "link") renderLinkPublico();
+        }
+        async function renderFuncionarios() {
+            try {
+                document.getElementById("painelContent").innerHTML = `<div class="loading">Carregando funcionários...</div>`;
+                const { data: funcionarios, error } = await supabase.from("funcionarios").select("*").eq("escola_id", escolaId);
+                if (error) console.error("Erro listando funcionarios:", error);
+                let list = "<ul>"; (funcionarios || []).forEach(f => { list += `<li>${f.nome}</li>`; }); list += "</ul>";
+                document.getElementById("painelContent").innerHTML = `
+            <h3 style="text-align:center">Cadastrar novo funcionário</h3>
+            <form id="formFunc" class="form-center">
+                <label>Nome do funcionário:</label>
+                <input type="text" id="nomeFuncionario" required>
+                <button type="submit">Cadastrar</button>
+            </form>
+            <h3 style="text-align:center">Funcionários cadastrados</h3>
+            <div class="form-center" style="margin-bottom: 16px">${list}</div>
+            <div id="msgFunc" class="msg-erro"></div>`;
+                document.getElementById("formFunc").onsubmit = async (e) => {
+                    e.preventDefault();
+                    const nome = document.getElementById("nomeFuncionario").value.trim();
+                    try { await supabase.from("funcionarios").insert([{ nome, escola_id: escolaId }]); renderFuncionarios(); }
+                    catch (err) { document.getElementById("msgFunc").innerText = "Erro ao cadastrar funcionário."; console.error(err); }
+                };
+            } catch (err) { document.getElementById("painelContent").innerHTML = "<div class='msg-erro'>Erro ao carregar funcionários.</div>"; console.error(err); }
+        }
+
+        async function renderPontos() {
+            try {
+                document.getElementById("painelContent").innerHTML = `<div class="loading">Carregando pontos...</div>`;
+                let checked = segAtiva ? "checked" : "";
+                let switchHTML = `
+                <div class="switch-wrap">
+                    <span class="switch-label">Proteger para não bater 2 pontos no mesmo aparelho/dia:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggleSeguranca" ${checked}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            `;
+                const now = new Date();
+                const mesAtual = now.getMonth() + 1, anoAtual = now.getFullYear();
+                const { data: pontos, error } = await supabase.from("pontos").select("*").eq("escola_id", escolaId);
+                if (error) console.error("Erro listando pontos:", error);
+                const pontosMes = (pontos || []).filter(p => {
+                    const data = new Date(p.data);
+                    return data.getMonth() + 1 === mesAtual && data.getFullYear() === anoAtual;
+                });
+                let html = switchHTML + `
+                <div class="table-scroll"><table>
+                <tr><th>Funcionário</th><th>Data</th><th>Hora</th></tr>`;
+                pontosMes.forEach(p => {
+                    html += `<tr><td>${p.nome_funcionario}</td><td>${p.data}</td><td>${p.hora}</td></tr>`;
+                });
+                html += "</table></div>";
+                if (pontosMes.length === 0) html += "<p>Nenhum ponto registrado neste mês.</p>";
+                document.getElementById("painelContent").innerHTML = html;
+                document.getElementById("toggleSeguranca").onchange = (e) => {
+                    segAtiva = e.target.checked;
+                    localStorage.setItem(SEG_KEY + "_" + escolaId, segAtiva);
+                    renderPontos();
+                }
+            } catch (err) {
+                document.getElementById("painelContent").innerHTML = "<div class='msg-erro'>Erro ao carregar pontos.</div>"; console.error(err);
+            }
+        }
+
+        // HISTÓRICO DA SEMANA (NOVO MENU)
+        async function renderHistorico() {
+            try {
+                document.getElementById("painelContent").innerHTML = `<div class="loading">Carregando histórico...</div>`;
+                let hoje = new Date();
+                let seteDiasAtras = new Date(hoje);
+                seteDiasAtras.setDate(hoje.getDate() - 6); // 7 dias, incluindo hoje
+                let dataInicio = seteDiasAtras.toISOString().slice(0, 10);
+                let dataFim = hoje.toISOString().slice(0, 10);
+
+                const { data: pontos, error } = await supabase
+                    .from("pontos")
+                    .select("*")
+                    .eq("escola_id", escolaId)
+                    .gte("data", dataInicio)
+                    .lte("data", dataFim)
+                    .order("data", { ascending: false });
+
+                if (error) console.error("Erro listando histórico:", error);
+
+                // Agrupa por dia
+                let agrupados = {};
+                (pontos || []).forEach(p => {
+                    if (!agrupados[p.data]) agrupados[p.data] = [];
+                    agrupados[p.data].push(p);
+                });
+
+                let html = `<h3 style="text-align:center;margin-bottom:10px">Histórico dos últimos 7 dias</h3>`;
+                for (let data of Object.keys(agrupados).sort((a, b) => b.localeCompare(a))) {
+                    html += `<div style="margin-bottom:10px"><b>${data}</b><div class="table-scroll"><table>
+                        <tr><th>Funcionário</th><th>Hora</th></tr>`;
+                    agrupados[data].forEach(p => {
+                        html += `<tr><td>${p.nome_funcionario}</td><td>${p.hora}</td></tr>`;
+                    });
+                    html += `</table></div></div>`;
+                }
+                if ((pontos || []).length === 0) html += "<p>Nenhum ponto registrado nos últimos 7 dias.</p>";
+                html += `<button class="btn-apagar-hist" id="apagarHistoricoBtn">Apagar histórico</button>`;
+                document.getElementById("painelContent").innerHTML = html;
+
+                // Botão para apagar histórico
+                document.getElementById("apagarHistoricoBtn").onclick = async () => {
+                    if (confirm("Tem certeza que deseja apagar todo o histórico da semana?")) {
+                        // Apaga todos os pontos dos últimos 7 dias
+                        let { error: delError } = await supabase
+                            .from("pontos")
+                            .delete()
+                            .eq("escola_id", escolaId)
+                            .gte("data", dataInicio)
+                            .lte("data", dataFim);
+                        if (delError) {
+                            alert("Erro ao apagar histórico.");
+                        } else {
+                            alert("Histórico apagado com sucesso!");
+                            renderHistorico();
+                        }
+                    }
+                };
+            } catch (err) {
+                document.getElementById("painelContent").innerHTML = "<div class='msg-erro'>Erro ao carregar histórico.</div>"; console.error(err);
+            }
+        }
+
+        function renderLinkPublico() {
+            document.getElementById("painelContent").innerHTML = `
+        <h3 style="text-align:center">Link Público de Ponto</h3>
+        <div class="link-publico">Copie e envie este link para seus funcionários: <br>
+        <b>${window.location.href.replace(/#.*$/, '')}#publico:${escolaId}</b>
+        </div>
+        <button onclick="window.abrirLinkPublico()">Abrir interface de ponto</button>
+        `;
+        }
+        function logout() { currentUser = null; escolaId = null; renderLogin(); }
+
+        async function renderPublico(escolaIdUrl) {
+            document.getElementById("app").innerHTML = `<div class="loading">Carregando funcionários...</div>`;
+            let segKey = SEG_KEY + "_" + escolaIdUrl;
+            let segProtegida = localStorage.getItem(segKey) === "true";
+            try {
+                const { data: funcionarios, error } = await supabase.from("funcionarios").select("*").eq("escola_id", escolaIdUrl);
+                if (error) console.error("Erro buscando funcionários:", error);
+                let podeBater = true;
+                let hj = new Date().toISOString().slice(0, 10);
+                let flag = "ponto_" + escolaIdUrl + "_" + hj;
+                if (segProtegida && localStorage.getItem(flag) === "1") podeBater = false;
+                document.getElementById("app").innerHTML = `
+            <h2>Bater Ponto</h2>
+            ${!podeBater ? '<div class="msg-erro">Já foi registrado um ponto neste aparelho hoje.<br>Volte amanhã.</div>' : `
+            <form id="batidaPontoForm" class="form-center">
+                <label>Nome do funcionário:</label>
+                <select id="funcionarioSelect" required>
+                    <option value="">Selecione...</option>
+                    ${(funcionarios || []).map(f => `<option value="${f.id}">${f.nome}</option>`).join('')}
+                </select>
+                <button type="submit">Bater Ponto</button>
+            </form>
+            <div id="msgPonto" class="msg-sucesso"></div>`}
+            <div style="margin-top:20px;text-align:center;"><a href="#" onclick="window.renderLogin()">Voltar para login</a></div>
+            `;
+                if (podeBater) {
+                    document.getElementById("batidaPontoForm").onsubmit = async (e) => {
+                        e.preventDefault();
+                        const funcionarioId = document.getElementById("funcionarioSelect").value;
+                        const funcionario = (funcionarios || []).find(f => f.id == funcionarioId);
+                        if (!funcionario) {
+                            document.getElementById("msgPonto").innerText = "Selecione um funcionário.";
+                            return;
+                        }
+                        const agora = new Date();
+                        const data = agora.toISOString().split('T')[0];
+                        const hora = agora.toTimeString().slice(0, 5);
+                        try {
+                            await supabase.from("pontos").insert([{
+                                funcionario_id: funcionarioId,
+                                escola_id: escolaIdUrl,
+                                nome_funcionario: funcionario.nome,
+                                data, hora
+                            }]);
+                            if (segProtegida) localStorage.setItem(flag, "1");
+                            document.getElementById("msgPonto").innerText = "Ponto registrado com sucesso!";
+                            setTimeout(() => { window.location.reload() }, 1300);
+                        } catch (err) {
+                            document.getElementById("msgPonto").innerText = "Erro ao registrar ponto.";
+                            console.error(err);
+                        }
+                    }
+                }
+            } catch (err) {
+                document.getElementById("app").innerHTML = "<div class='msg-erro'>Erro ao carregar funcionários.</div>";
+                console.error(err);
+            }
+        }
+        function router() {
+            if (window.location.hash.startsWith("#publico:")) {
+                const escId = window.location.hash.split(":")[1];
+                renderPublico(escId);
+            } else {
+                if (currentUser) renderPainel();
+                else renderLogin();
+            }
+        }
+        window.renderCadastro = renderCadastro;
+        window.renderLogin = renderLogin;
+        window.logout = logout;
+        window.abrirLinkPublico = () => {
+            window.open(`${window.location.href.replace(/#.*$/, '')}#publico:${escolaId}`, '_blank');
+        };
+        router();
+        window.onhashchange = router;
+    </script>
+</body>
+
+</html>
