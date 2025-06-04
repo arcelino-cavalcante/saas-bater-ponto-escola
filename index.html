@@ -374,12 +374,33 @@
                 const email = document.getElementById("cadEmail").value.trim();
                 const senha = document.getElementById("cadSenha").value.trim();
                 try {
-                    const { data: jaExiste } = await supabase.from("users").select("*").eq("email", email);
-                    if (jaExiste && jaExiste.length > 0) { exibeErro("E-mail já cadastrado."); return; }
-                    const { error } = await supabase.from("users").insert([{ nome_escola: nome, email, password: senha }]);
-                    if (error) { exibeErro("Erro ao cadastrar. Tente outro e-mail."); console.error("Cadastro erro:", error); }
-                    else { alert("Cadastro realizado! Faça login."); renderLogin(); }
-                } catch (err) { exibeErro("Erro ao conectar ao servidor!"); console.error(err); }
+                    const { data: jaExiste, error: jaExisteErr } = await supabase
+                        .from("users")
+                        .select("*")
+                        .eq("email", email);
+                    if (jaExisteErr) {
+                        exibeErro("Erro ao verificar e-mail.");
+                        console.error("Cadastro erro:", jaExisteErr);
+                        return;
+                    }
+                    if (jaExiste && jaExiste.length > 0) {
+                        exibeErro("E-mail já cadastrado.");
+                        return;
+                    }
+                    const { error } = await supabase
+                        .from("users")
+                        .insert([{ nome_escola: nome, email, password: senha }]);
+                    if (error) {
+                        exibeErro("Erro ao cadastrar. Tente outro e-mail.");
+                        console.error("Cadastro erro:", error);
+                    } else {
+                        alert("Cadastro realizado! Faça login.");
+                        renderLogin();
+                    }
+                } catch (err) {
+                    exibeErro("Erro ao conectar ao servidor!");
+                    console.error(err);
+                }
             };
         }
         function renderPainel(menu = "funcionarios") {
